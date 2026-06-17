@@ -72,4 +72,9 @@ python3 -m venv testenv # should create a venv without errors
 java -version
 mvn -version
 git --version
+echo "$JAVA_HOME"     # path under /usr/lib/jvm (set in /etc/environment)
 ```
+
+> `JAVA_HOME` is written to `/etc/environment` by the setup script, so it
+> applies system-wide on your next login. To use it in the current shell
+> without logging out: `source /etc/environment && export JAVA_HOME`.

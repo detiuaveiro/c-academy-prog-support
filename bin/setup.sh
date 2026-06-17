@@ -42,6 +42,27 @@ fix_java_certs() {
   sudo apt-get install -y ca-certificates-java
 }
 
+# --- JAVA_HOME (system-wide via /etc/environment) ---------------------------
+# Derive JAVA_HOME from the actual JDK install rather than hardcoding a version,
+# so it stays correct whatever version default-jdk resolves to.
+log "Setting JAVA_HOME in /etc/environment"
+JAVA_HOME_PATH=""
+if command -v java >/dev/null 2>&1; then
+  JAVA_HOME_PATH="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+fi
+if [ -z "$JAVA_HOME_PATH" ] || [ ! -d "$JAVA_HOME_PATH" ]; then
+  warn "Could not detect JAVA_HOME automatically — skipping. Check 'ls /usr/lib/jvm/'."
+  JAVA_HOME_PATH=""
+fi
+if [ -n "$JAVA_HOME_PATH" ]; then
+  log "JAVA_HOME=$JAVA_HOME_PATH"
+  # Idempotent: drop any existing JAVA_HOME line, then append the current one.
+  sudo sed -i '/^JAVA_HOME=/d' /etc/environment
+  echo "JAVA_HOME=\"$JAVA_HOME_PATH\"" | sudo tee -a /etc/environment >/dev/null
+  # Make it available in the current shell too (takes effect in new logins otherwise).
+  export JAVA_HOME="$JAVA_HOME_PATH"
+fi
+
 # --- VS Code ----------------------------------------------------------------
 if ! command -v code >/dev/null 2>&1; then
   log "Installing VS Code (snap)"
