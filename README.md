@@ -29,8 +29,14 @@ tools inside it (automated).
 
 ### 2. Provision the VM (inside Ubuntu)
 
-Open a terminal in the VM. The recommended way is to download the script,
-read it, then run it:
+Open a terminal in the VM. A base Ubuntu install does not ship `curl`, so
+install it first:
+
+```bash
+sudo apt update && sudo apt install -y curl
+```
+
+The recommended way is then to download the script, read it, then run it:
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/detiuaveiro/c-academy-prog-support/main/bin/setup.sh
@@ -49,7 +55,7 @@ The script installs and verifies:
 - **Python** — `python3`, `python3-venv`, `python3-pip` (Python 3.14, the
   Ubuntu 26.04 default)
 - **Java** — `default-jdk`, `maven`
-- **Tools** — `git`, `vim`
+- **Tools** — `git`, `vim`, `curl`
 - **VS Code** — plus the Python and Java extensions
 
 It is idempotent (safe to re-run) and does not pin package versions — the LTS
