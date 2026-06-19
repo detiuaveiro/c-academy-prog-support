@@ -4,7 +4,7 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/setup.sh | bash
 #
-# Installs curl, Python, Java, git, vim, VS Code and the Python/Java extensions.
+# Installs curl, Python, Java, Rust, git, vim, VS Code and the Python/Java/Rust extensions.
 # Idempotent: safe to re-run. Does NOT pin package versions — the LTS archive
 # already locks the 3.14 / JDK series for you.
 
@@ -31,6 +31,9 @@ sudo apt-get install -y python3 python3-venv python3-pip
 
 log "Installing Java toolchain"
 sudo apt-get install -y default-jdk maven
+
+log "Installing Rust toolchain"
+sudo apt-get install -y rustc cargo
 
 log "Installing git, vim and curl"
 sudo apt-get install -y git vim curl
@@ -64,36 +67,24 @@ if [ -n "$JAVA_HOME_PATH" ]; then
 fi
 
 # --- VS Code ----------------------------------------------------------------
-# The `code` snap is published for amd64 only, so on arm64 (e.g. Apple Silicon
-# hosts) it fails with "not available on stable for this architecture". Install
-# from Microsoft's official apt repository instead, which ships amd64, arm64 and
-# armhf builds. We use snap on amd64 (the existing path) and fall back to the
-# apt repo when snap can't provide it.
-install_vscode_apt() {
-  log "Installing VS Code (Microsoft apt repository)"
-  sudo apt-get install -y wget gpg apt-transport-https
-  local keyring="/etc/apt/keyrings/packages.microsoft.gpg"
-  local tmp_key
-  tmp_key="$(mktemp)"
-  wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > "$tmp_key"
-  sudo install -D -o root -g root -m 644 "$tmp_key" "$keyring"
-  rm -f "$tmp_key"
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=$keyring] https://packages.microsoft.com/repos/code stable main" \
-    | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
-  sudo apt-get update -y
-  sudo apt-get install -y code
-}
-
+# Install from Microsoft's official apt repository. This is the official route
+# and works on every architecture (amd64, arm64, armhf) — unlike the `code`
+# snap, which is amd64-only and fails on arm64 (e.g. Apple Silicon hosts) with
+# "not available on stable for this architecture".
 if command -v code >/dev/null 2>&1; then
   log "VS Code already installed"
 else
-  ARCH="$(dpkg --print-architecture)"
-  if [ "$ARCH" = "amd64" ] && command -v snap >/dev/null 2>&1 && sudo snap install code --classic; then
-    log "Installed VS Code (snap)"
-  else
-    warn "snap 'code' is unavailable for $ARCH — using Microsoft apt repository"
-    install_vscode_apt
-  fi
+  log "Installing VS Code (Microsoft apt repository)"
+  sudo apt-get install -y wget gpg apt-transport-https
+  KEYRING="/etc/apt/keyrings/packages.microsoft.gpg"
+  TMP_KEY="$(mktemp)"
+  wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > "$TMP_KEY"
+  sudo install -D -o root -g root -m 644 "$TMP_KEY" "$KEYRING"
+  rm -f "$TMP_KEY"
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=$KEYRING] https://packages.microsoft.com/repos/code stable main" \
+    | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
+  sudo apt-get update -y
+  sudo apt-get install -y code
 fi
 
 # --- VS Code extensions -----------------------------------------------------
@@ -101,6 +92,7 @@ if command -v code >/dev/null 2>&1; then
   log "Installing VS Code extensions"
   code --install-extension ms-python.python --force
   code --install-extension vscjava.vscode-java-pack --force
+  code --install-extension rust-lang.rust-analyzer --force
 fi
 
 # --- verify -----------------------------------------------------------------
@@ -109,6 +101,8 @@ python3 --version || true
 pip3 --version    || true
 java -version 2>&1 | head -1 || true
 mvn -version 2>&1 | head -1  || true
+rustc --version    || true
+cargo --version    || true
 git --version     || true
 
 # quick venv smoke test

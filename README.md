@@ -55,8 +55,9 @@ The script installs and verifies:
 - **Python** — `python3`, `python3-venv`, `python3-pip` (Python 3.14, the
   Ubuntu 26.04 default)
 - **Java** — `default-jdk`, `maven`
+- **Rust** — `rustc`, `cargo`
 - **Tools** — `git`, `vim`, `curl`
-- **VS Code** — plus the Python and Java extensions
+- **VS Code** — plus the Python, Java, and Rust extensions
 
 It is idempotent (safe to re-run) and does not pin package versions — the LTS
 archive already locks the relevant series.
@@ -77,6 +78,8 @@ python3 --version       # Python 3.14.x
 python3 -m venv testenv # should create a venv without errors
 java -version
 mvn -version
+rustc --version
+cargo --version
 git --version
 echo "$JAVA_HOME"     # path under /usr/lib/jvm (set in /etc/environment)
 ```
