@@ -114,4 +114,26 @@ else
   warn "python venv failed — check python3-venv"
 fi
 
+# Remove the downloaded script after a successful run, but keep repository
+# copies intact for maintainers running it from a checkout.
+cleanup_self() {
+  local script_path="${BASH_SOURCE[0]:-$0}"
+  local script_dir
+
+  [ "$(basename "$script_path")" = "setup.sh" ] || return 0
+  [ -f "$script_path" ] || return 0
+
+  script_dir="$(cd "$(dirname "$script_path")" && pwd -P)" || return 0
+  if command -v git >/dev/null 2>&1 \
+    && git -C "$script_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    warn "Leaving setup.sh in place because it is inside a git worktree."
+    return 0
+  fi
+
+  log "Removing downloaded setup.sh"
+  rm -f -- "$script_path"
+}
+
+cleanup_self
+
 log "Done."
