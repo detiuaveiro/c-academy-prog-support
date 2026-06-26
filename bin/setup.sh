@@ -4,7 +4,8 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/setup.sh | bash
 #
-# Installs curl, Python, Java, Rust, git, vim, VS Code and the Python/Java/Rust extensions.
+# Installs curl, Python, Java, Haskell, Rust, git, vim, VS Code and the
+# Python/Java/Haskell/Rust extensions.
 # Idempotent: safe to re-run. Does NOT pin package versions — the LTS archive
 # already locks the 3.14 / JDK series for you.
 
@@ -31,6 +32,9 @@ sudo apt-get install -y python3 python3-venv python3-pip
 
 log "Installing Java toolchain"
 sudo apt-get install -y default-jdk maven
+
+log "Installing Haskell toolchain"
+sudo apt-get install -y ghc cabal-install
 
 log "Installing Rust toolchain"
 sudo apt-get install -y rustc cargo
@@ -92,6 +96,7 @@ if command -v code >/dev/null 2>&1; then
   log "Installing VS Code extensions"
   code --install-extension ms-python.python --force
   code --install-extension vscjava.vscode-java-pack --force
+  code --install-extension haskell.haskell --force
   code --install-extension rust-lang.rust-analyzer --force
 fi
 
@@ -100,7 +105,13 @@ log "Versions installed:"
 python3 --version || true
 pip3 --version    || true
 java -version 2>&1 | head -1 || true
+javac -version      || true
+javadoc -version 2>&1 | head -1 || true
 mvn -version 2>&1 | head -1  || true
+ghc --version       || true
+ghci --version      || true
+runghc --version    || true
+cabal --version 2>&1 | head -1 || true
 rustc --version    || true
 cargo --version    || true
 git --version     || true

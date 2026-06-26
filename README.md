@@ -55,9 +55,10 @@ The script installs and verifies:
 - **Python** — `python3`, `python3-venv`, `python3-pip` (Python 3.14, the
   Ubuntu 26.04 default)
 - **Java** — `default-jdk`, `maven`
+- **Haskell** — `ghc`, `ghci`, `runghc`, `cabal`
 - **Rust** — `rustc`, `cargo`
 - **Tools** — `git`, `vim`, `curl`
-- **VS Code** — plus the Python, Java, and Rust extensions
+- **VS Code** — plus the Python, Java, Haskell, and Rust extensions
 
 It is idempotent (safe to re-run) and does not pin package versions — the LTS
 archive already locks the relevant series.
@@ -77,7 +78,13 @@ sudo apt-get install ca-certificates-java
 python3 --version       # Python 3.14.x
 python3 -m venv testenv # should create a venv without errors
 java -version
+javac -version
+javadoc -version
 mvn -version
+ghc --version
+ghci --version
+runghc --version
+cabal --version
 rustc --version
 cargo --version
 git --version
