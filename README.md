@@ -57,6 +57,8 @@ The script installs and verifies:
 - **Java** — `default-jdk`, `maven`
 - **Haskell** — `ghc`, `ghci`, `runghc`, `cabal`
 - **Rust** — `rustc`, `cargo`
+- **C / low-level** — `gcc`, `make`, `objdump` / `binutils`
+- **MIPS** — `spim`
 - **Tools** — `git`, `vim`, `curl`
 - **VS Code** — plus the Python, Java, Haskell, and Rust extensions
 
@@ -87,6 +89,10 @@ runghc --version
 cabal --version
 rustc --version
 cargo --version
+gcc --version
+make --version
+objdump --version
+spim -version
 git --version
 echo "$JAVA_HOME"     # path under /usr/lib/jvm (set in /etc/environment)
 ```

@@ -4,7 +4,8 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/setup.sh | bash
 #
-# Installs curl, Python, Java, Haskell, Rust, git, vim, VS Code and the
+# Installs curl, Python, Java, Haskell, Rust, C/binutils, MIPS tooling, git,
+# vim, VS Code and the
 # Python/Java/Haskell/Rust extensions.
 # Idempotent: safe to re-run. Does NOT pin package versions — the LTS archive
 # already locks the 3.14 / JDK series for you.
@@ -38,6 +39,12 @@ sudo apt-get install -y ghc cabal-install
 
 log "Installing Rust toolchain"
 sudo apt-get install -y rustc cargo
+
+log "Installing C and low-level tooling"
+sudo apt-get install -y build-essential binutils make
+
+log "Installing MIPS simulator"
+sudo apt-get install -y spim
 
 log "Installing git, vim and curl"
 sudo apt-get install -y git vim curl
@@ -114,6 +121,10 @@ runghc --version    || true
 cabal --version 2>&1 | head -1 || true
 rustc --version    || true
 cargo --version    || true
+gcc --version 2>&1 | head -1 || true
+make --version 2>&1 | head -1 || true
+objdump --version 2>&1 | head -1 || true
+spim -version 2>&1 | head -2 || true
 git --version     || true
 
 # quick venv smoke test
