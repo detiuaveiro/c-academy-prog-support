@@ -5,8 +5,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/setup.sh | bash
 #
 # Installs curl, Python, Java, Haskell, Rust, C/binutils, MIPS tooling, git,
-# vim, VS Code and the
-# Python/Java/Haskell/Rust extensions.
+# vim, VS Code and the Python/Java/Haskell/Rust extensions.
 # Idempotent: safe to re-run. Does NOT pin package versions — the LTS archive
 # already locks the 3.14 / JDK series for you.
 
@@ -16,9 +15,20 @@ log()  { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[!]\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
 
+MARS_URL="https://dpetersanderson.github.io/Mars4_5.jar"
+MARS_SHA256="ac340b676ba2b62246b9df77e62f81ad4447bcfd329ab539716bcd09950b7096"
+MARS_DIR="/opt/mars"
+MARS_JAR="$MARS_DIR/Mars.jar"
+
 # --- sanity checks ----------------------------------------------------------
 [ "$(id -u)" -ne 0 ] || die "Run as a normal user (the script calls sudo itself), not as root."
 command -v apt-get >/dev/null 2>&1 || die "This script targets Ubuntu/Debian (apt-get not found)."
+command -v sudo >/dev/null 2>&1 || die "sudo is required but was not found."
+
+log "Checking sudo access"
+if ! sudo -v; then
+  die "Could not obtain sudo privileges. Run this script from a user that can use sudo."
+fi
 
 if command -v lsb_release >/dev/null 2>&1; then
   log "Detected: $(lsb_release -ds)"
@@ -43,11 +53,38 @@ sudo apt-get install -y rustc cargo
 log "Installing C and low-level tooling"
 sudo apt-get install -y build-essential binutils make
 
-log "Installing MIPS simulator"
-sudo apt-get install -y spim
-
 log "Installing git, vim and curl"
 sudo apt-get install -y git vim curl
+
+log "Installing MIPS terminal simulator"
+sudo apt-get install -y spim
+
+install_mars() {
+  local tmp_jar
+
+  if [ -f "$MARS_JAR" ] && echo "$MARS_SHA256  $MARS_JAR" | sha256sum -c - >/dev/null 2>&1; then
+    log "MARS already installed"
+  else
+    log "Downloading MARS 4.5"
+    tmp_jar="$(mktemp)"
+    trap 'rm -f "$tmp_jar"' RETURN
+    curl -fsSL "$MARS_URL" -o "$tmp_jar"
+    echo "$MARS_SHA256  $tmp_jar" | sha256sum -c -
+    sudo install -d -m 755 "$MARS_DIR"
+    sudo install -m 644 "$tmp_jar" "$MARS_JAR"
+    rm -f "$tmp_jar"
+    trap - RETURN
+  fi
+
+  sudo tee /usr/local/bin/mars >/dev/null <<'EOF'
+#!/usr/bin/env bash
+exec java -jar /opt/mars/Mars.jar "$@"
+EOF
+  sudo chmod +x /usr/local/bin/mars
+}
+
+log "Installing MARS MIPS GUI simulator"
+install_mars
 
 # --- Java certificate fix (only if Maven/JDK TLS is broken) -----------------
 fix_java_certs() {
@@ -125,6 +162,8 @@ gcc --version 2>&1 | head -1 || true
 make --version 2>&1 | head -1 || true
 objdump --version 2>&1 | head -1 || true
 spim -version 2>&1 | head -2 || true
+command -v mars >/dev/null 2>&1 && echo "mars: $(command -v mars)" || true
+[ -f "$MARS_JAR" ] && echo "$MARS_SHA256  $MARS_JAR" | sha256sum -c - || true
 git --version     || true
 
 # quick venv smoke test

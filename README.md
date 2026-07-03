@@ -58,7 +58,8 @@ The script installs and verifies:
 - **Haskell** — `ghc`, `ghci`, `runghc`, `cabal`
 - **Rust** — `rustc`, `cargo`
 - **C / low-level** — `gcc`, `make`, `objdump` / `binutils`
-- **MIPS** — `spim`
+- **MIPS** — `spim` for terminal execution, plus the MARS GUI simulator as
+  `mars`
 - **Tools** — `git`, `vim`, `curl`
 - **VS Code** — plus the Python, Java, Haskell, and Rust extensions
 
@@ -93,8 +94,15 @@ gcc --version
 make --version
 objdump --version
 spim -version
+command -v mars         # should print /usr/local/bin/mars
 git --version
 echo "$JAVA_HOME"     # path under /usr/lib/jvm (set in /etc/environment)
+```
+
+To open the graphical MIPS simulator used in the Session 05 slides, run:
+
+```bash
+mars
 ```
 
 > `JAVA_HOME` is written to `/etc/environment` by the setup script, so it
