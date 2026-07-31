@@ -4,8 +4,8 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/<org>/<repo>/main/setup.sh | bash
 #
-# Installs curl, Python, Java, Haskell, Rust, C/binutils, MIPS tooling, git,
-# vim, VS Code and the Python/Java/Haskell/Rust extensions.
+# Installs curl, Python, Java, Haskell, Rust, C/binutils, MIPS tooling, Docker,
+# git, vim, VS Code and the Python/Java/Haskell/Rust extensions.
 # Idempotent: safe to re-run. Does NOT pin package versions — the LTS archive
 # already locks the 3.14 / JDK series for you.
 
@@ -19,6 +19,26 @@ MARS_URL="https://dpetersanderson.github.io/Mars4_5.jar"
 MARS_SHA256="ac340b676ba2b62246b9df77e62f81ad4447bcfd329ab539716bcd09950b7096"
 MARS_DIR="/opt/mars"
 MARS_JAR="$MARS_DIR/Mars.jar"
+
+usage() {
+  cat <<'EOF'
+Uso: bash setup.sh
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      die "Unknown option: $1"
+      ;;
+  esac
+  shift
+done
 
 # --- sanity checks ----------------------------------------------------------
 [ "$(id -u)" -ne 0 ] || die "Run as a normal user (the script calls sudo itself), not as root."
@@ -53,8 +73,24 @@ sudo apt-get install -y rustc cargo
 log "Installing C and low-level tooling"
 sudo apt-get install -y build-essential binutils make
 
-log "Installing git, vim and curl"
-sudo apt-get install -y git vim curl
+log "Installing git, vim, curl and archive tools"
+sudo apt-get install -y git vim curl unzip
+
+# --- Docker -----------------------------------------------------------------
+# Use the Ubuntu packages so the installation follows the VM's architecture
+# and LTS update channel. The Compose v2 plugin provides `docker compose`.
+log "Installing Docker Engine and Compose"
+sudo apt-get install -y docker.io docker-compose-v2
+sudo systemctl enable --now docker
+
+VM_USER="$(id -un)"
+if id -nG "$VM_USER" | tr ' ' '\n' | grep -qx docker; then
+  log "$VM_USER already belongs to the docker group"
+else
+  log "Adding $VM_USER to the docker group"
+  sudo usermod -aG docker "$VM_USER"
+  warn "Docker group access becomes active after logging out and back in."
+fi
 
 log "Installing MIPS terminal simulator"
 sudo apt-get install -y spim
@@ -165,6 +201,8 @@ spim -version 2>&1 | head -2 || true
 command -v mars >/dev/null 2>&1 && echo "mars: $(command -v mars)" || true
 [ -f "$MARS_JAR" ] && echo "$MARS_SHA256  $MARS_JAR" | sha256sum -c - || true
 git --version     || true
+docker --version  || true
+sudo docker compose version || true
 
 # quick venv smoke test
 TMP_VENV="$(mktemp -d)/testenv"
